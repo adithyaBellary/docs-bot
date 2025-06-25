@@ -49,23 +49,12 @@ def get_all_links(root = ROOT):
         traverse(urllib.parse.urljoin(root, url.path), depth + 1)
 
   traverse(root, 0)
-  # for link in links:
-  #   print(link)
 
   return [urllib.parse.urljoin(root, link) for link in links]
 
 def ingest_documentation():
-  # links = get_all_links()
-  # links = links[:2]
   URL = "https://react-hook-form.com/docs/useformstate"
   links = [URL]
-  # loader = ScrapingAntLoader(
-  #   urls=links,
-  #   api_key=os.getenv("SCRAPING_ANT_API_KEY"),
-  #   continue_on_failure=True,
-  # )
-
-  # content = loader.load()
 
   resp = requests.get(f"https://api.scrapingant.com/v2/general?url={URL}&x-api-key={SCRAPING_ANT_API_KEY}")
   soup = BeautifulSoup(resp.text, "html.parser")
@@ -74,15 +63,11 @@ def ingest_documentation():
 
   content = [doc]
 
-  # print('content', content)
-  # print('\n\n')
   headers_to_split_on = [
     ("h1", "Header 1"),
     ("h2", "Header 2"),
     ("h3", "Header 3"),
     ("h4", "Header 4"),
-    # ("h5", "Header 5"),
-    # ("h6", "Header 6"),
   ]
 
   semantic_splitter = HTMLSemanticPreservingSplitter(
@@ -91,40 +76,19 @@ def ingest_documentation():
     separators=["\n\n", "\n"],
   )
   fallback_splitter = RecursiveCharacterTextSplitter(separators=["\n\n", "\n", '.', ' '], chunk_size=1000, chunk_overlap=200)
-  # fallback_splitter = RecursiveCharacterTextSplitter(separators=[""], chunk_size=1000, chunk_overlap=200)
 
   split_docs = []
   for doc in content:
-    # print('page content', doc.page_content)
-    # print('\n')
     split_doc = semantic_splitter.split_text(doc.page_content)
     for d in split_doc:
-      # print('combined', d.metadata | doc.metadata)
       d.metadata = d.metadata | doc.metadata
-      # print('d length,', len(d.page_content), d.metadata)
       if (len(d.page_content) > 1500):
-        print('too big', d.page_content)
-        print('tokens', len(enc.encode(d.page_content)))
         smaller_docs = fallback_splitter.split_documents([d])
         for s in smaller_docs:
-          print('s meta', len(s.page_content), s.metadata)
-          print('small tokens', len(enc.encode(s.page_content)))
           split_docs.append(s)
       else:
-        print('good size', len(d.page_content), d.metadata)
         split_docs.append(d)
-      
-    # print('doc meta', doc.metadata)
-    # print('x', x, len(x))
-    # split_docs.extend(split_doc)
-  
-  for doc in split_docs:
-    print(len(doc.page_content), doc.metadata)
-    print('\n')
 
-  # print('len', len(split_docs))
-  # print("\n\n")
-  # print('split', split_docs[0])
   embeddings = OpenAIEmbeddings()
   vector_store = FAISS.from_documents(split_docs, embeddings)
   vector_store.save_local("faiss_local")
@@ -134,22 +98,6 @@ def answer_question():
   embeddings = OpenAIEmbeddings()
   vector_store = FAISS.load_local("faiss_local", embeddings, allow_dangerous_deserialization=True)
   docs = vector_store.similarity_search(query, k=4)
-  
-  # print('docs found', len(docs))
-  # for doc in docs:
-  #   print(len(doc.page_content))
-  #   print(doc.metadata)
-  
-  # docs_and_scores = vector_store.similarity_search_with_score(query, k = 4)
-  # for doc, score in docs_and_scores:
-  #   print(doc.page_content[:300])
-  #   print(doc.metadata)
-  #   print(score)
-  #   print('\n')
-
-  # summarized_docs = []
-  # for doc in docs:
-
 
   context = "\n\n".join([f"Source: {doc.metadata}\n{doc.page_content}" for doc in docs])
 
