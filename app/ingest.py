@@ -9,6 +9,7 @@ from openai import OpenAI
 import requests
 from bs4 import BeautifulSoup
 import os
+import hashlib
 import urllib
 
 load_dotenv()
@@ -49,19 +50,36 @@ def get_all_links(root = ROOT):
 
   return [urllib.parse.urljoin(root, link) for link in links]
 
-def ingest_documentation():
-  # URL = "https://react-hook-form.com/docs/useformstate"
-  # links = [URL]
+def scrape_docs():
+  # links = ["https://react-hook-form.com/docs/useformstate"]
   links = get_all_links()
   content = []
 
   for link in links:
-    resp = requests.get(f"https://api.scrapingant.com/v2/general?url={link}&x-api-key={SCRAPING_ANT_API_KEY}")
-    soup = BeautifulSoup(resp.text, "html.parser")
-    html = soup.prettify()
-    doc = Document(page_content=html, metadata={"source": link})
+    hashed_link = hashlib.sha256(link.encode("utf-8")).hexdigest() + '.txt' 
+    hashed_link_full = os.path.join("tmp", hashed_link)
+    print(link, hashed_link_full)
+    if os.path.exists(hashed_link_full):
+      print('exists')
+      with open(hashed_link_full, 'r') as file:
+        html_from_file = file.read()
+        doc = Document(page_content=html_from_file, metadata={"source": link})
+    else:
+      print('does not exist')
+      resp = requests.get(f"https://api.scrapingant.com/v2/general?url={link}&x-api-key={SCRAPING_ANT_API_KEY}")
+      soup = BeautifulSoup(resp.text, "html.parser")
+      html = str(soup.prettify())
+
+      with open(hashed_link_full, "x") as file:
+        file.write(html)
+      doc = Document(page_content=html, metadata={"source": link})
+
     content.append(doc)
     print(f"fetched: {link}")
+  return content
+
+def ingest_documentation():
+  document_content = scrape_docs()
 
   headers_to_split_on = [
     ("h1", "Header 1"),
@@ -78,7 +96,7 @@ def ingest_documentation():
   fallback_splitter = RecursiveCharacterTextSplitter(separators=["\n\n", "\n", '.', ' '], chunk_size=1000, chunk_overlap=200)
 
   split_docs = []
-  for doc in content:
+  for doc in document_content:
     split_doc = semantic_splitter.split_text(doc.page_content)
     for d in split_doc:
       d.metadata = d.metadata | doc.metadata
