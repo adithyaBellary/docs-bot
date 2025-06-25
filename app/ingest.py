@@ -10,15 +10,12 @@ import requests
 from bs4 import BeautifulSoup
 import os
 import urllib
-import tiktoken
 
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
-ROOT = "https://react-hook-form.com/docs"
 SCRAPING_ANT_API_KEY = os.getenv("SCRAPING_ANT_API_KEY")
 
-enc = tiktoken.encoding_for_model("gpt-4")
+ROOT = "https://react-hook-form.com/docs"
 
 def get_all_links(root = ROOT):
   links = set()
@@ -53,15 +50,18 @@ def get_all_links(root = ROOT):
   return [urllib.parse.urljoin(root, link) for link in links]
 
 def ingest_documentation():
-  URL = "https://react-hook-form.com/docs/useformstate"
-  links = [URL]
+  # URL = "https://react-hook-form.com/docs/useformstate"
+  # links = [URL]
+  links = get_all_links()
+  content = []
 
-  resp = requests.get(f"https://api.scrapingant.com/v2/general?url={URL}&x-api-key={SCRAPING_ANT_API_KEY}")
-  soup = BeautifulSoup(resp.text, "html.parser")
-  html = soup.prettify()
-  doc = Document(page_content=html, metadata={"source": URL})
-
-  content = [doc]
+  for link in links:
+    resp = requests.get(f"https://api.scrapingant.com/v2/general?url={link}&x-api-key={SCRAPING_ANT_API_KEY}")
+    soup = BeautifulSoup(resp.text, "html.parser")
+    html = soup.prettify()
+    doc = Document(page_content=html, metadata={"source": link})
+    content.append(doc)
+    print(f"fetched: {link}")
 
   headers_to_split_on = [
     ("h1", "Header 1"),
@@ -106,7 +106,6 @@ def answer_question():
 
     Question: {query}"""
 
-  
   response = client.chat.completions.create(
     model="gpt-4",
     messages=[
@@ -118,6 +117,4 @@ def answer_question():
   )
 
   print(response.choices[0].message.content.strip())
-
-
 
