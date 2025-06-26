@@ -5,7 +5,7 @@ from langchain_community.embeddings import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain.docstore.document import Document
 from dotenv import load_dotenv
-from openai import OpenAI
+
 import requests
 from bs4 import BeautifulSoup
 import os
@@ -13,7 +13,7 @@ import hashlib
 import urllib
 
 load_dotenv()
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
 SCRAPING_ANT_API_KEY = os.getenv("SCRAPING_ANT_API_KEY")
 
 ROOT = "https://react-hook-form.com/docs"
@@ -110,29 +110,4 @@ def ingest_documentation():
   embeddings = OpenAIEmbeddings()
   vector_store = FAISS.from_documents(split_docs, embeddings)
   vector_store.save_local("faiss_local")
-
-def answer_question():
-  query = "What are all the fields that the useFormState returns?"
-  embeddings = OpenAIEmbeddings()
-  vector_store = FAISS.load_local("faiss_local", embeddings, allow_dangerous_deserialization=True)
-  docs = vector_store.similarity_search(query, k=4)
-
-  context = "\n\n".join([f"Source: {doc.metadata}\n{doc.page_content}" for doc in docs])
-
-  prompt = f"""You are a helpful documentation assistant. Answer any and all quesitons based only on the context below. Do not go elsewhere for information. Please cite the source of section where you got your answer from.
-    Context: {context}
-
-    Question: {query}"""
-
-  response = client.chat.completions.create(
-    model="gpt-4",
-    messages=[
-      {
-        "role": "user", "content": prompt
-      }
-    ],
-    temperature=0.2
-  )
-
-  print(response.choices[0].message.content.strip())
 
