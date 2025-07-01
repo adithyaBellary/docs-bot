@@ -7,8 +7,7 @@ import os
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-def answer_question():
-  query = "What are all the fields that the useFormState returns?"
+def answer_question(query):
   embeddings = OpenAIEmbeddings()
   vector_store = FAISS.load_local("faiss_local", embeddings, allow_dangerous_deserialization=True)
   docs = vector_store.similarity_search(query, k=4)
@@ -30,4 +29,6 @@ def answer_question():
     temperature=0.2
   )
 
-  print(response.choices[0].message.content.strip())
+  answer = response.choices[0].message.content.strip()
+  print(answer)
+  return answer
