@@ -2,6 +2,6 @@
 venv/
 
 .env
-app/__pycache__
+*/__pycache__/
 faiss_local/
 tmp/

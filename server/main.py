@@ -1,13 +1,18 @@
 from fastapi import FastAPI, Request
 from pydantic import BaseModel
 from app.client import answer_question
+# import uvicorn
 
-app = FastAPI()
+PORT = 8000
+doc_server = FastAPI()
 
 class QueryRequest(BaseModel):
     query: str
 
-@app.post("/ask")
+@doc_server.post("/ask")
 def ask(request: QueryRequest):
     answer = answer_question(request.query)
     return {"answer": answer}
+
+# if __name__ == "__main__":
+#     uvicorn.run("server:doc_server", port=8000, reload=True)
