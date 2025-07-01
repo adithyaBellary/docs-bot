@@ -14,5 +14,5 @@ This is still currently being worked on! So please check back in regularly.
 
 Some things that are currently in flight:
 - Interactive chat 
-- deploying this to Heroku 
+- deploying this to AWS 
 - tbd
