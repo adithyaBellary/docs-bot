@@ -16,12 +16,11 @@ def ask(request: QueryRequest):
 
 @doc_server.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
-    print("connected")
     await websocket.accept()
     while True:
         data = await websocket.receive_text()
-        print("ws data:", data)
-        await websocket.send_text(f"Message was: {data}")
+        answer = answer_question(data)
+        await websocket.send_text(answer)
 
 # if __name__ == "__main__":
-#     uvicorn.run("server:doc_server", port=8000, reload=True)
+#     uvicorn.run("server:doc_server", port=PORT, reload=True)
