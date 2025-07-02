@@ -50,9 +50,9 @@ def get_all_links(root = ROOT):
 
   return [urllib.parse.urljoin(root, link) for link in links]
 
-def scrape_docs():
+def scrape_docs(URL):
   # links = ["https://react-hook-form.com/docs/useformstate"]
-  links = get_all_links()
+  links = get_all_links(URL)
   content = []
 
   for link in links:
@@ -78,8 +78,8 @@ def scrape_docs():
     print(f"fetched: {link}")
   return content
 
-def ingest_documentation():
-  document_content = scrape_docs()
+def ingest_documentation(URL):
+  document_content = scrape_docs(URL)
 
   headers_to_split_on = [
     ("h1", "Header 1"),
