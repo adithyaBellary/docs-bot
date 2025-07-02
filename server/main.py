@@ -19,6 +19,10 @@ def ask(request: QueryRequest):
     answer = answer_question(request.query)
     return {"answer": answer}
 
+@doc_server.get("/test")
+def test():
+    return {"message": "Hello, World!"}
+
 @doc_server.post("/ingest")
 async def ingest(request: Request):
     data = await request.json()
@@ -38,7 +42,7 @@ async def websocket_endpoint(websocket: WebSocket):
         # answer = answer_question(data)
         # await websocket.send_text(answer)
 
-doc_server.mount("/chat", StaticFiles(directory=fe_path, html=True), name="docs-bot-frontend")
+doc_server.mount("/", StaticFiles(directory=fe_path, html=True), name="docs-bot-frontend")
 
 # if __name__ == "__main__":
 #     uvicorn.run("server:doc_server", port=PORT, reload=True)
