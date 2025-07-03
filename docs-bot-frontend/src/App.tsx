@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import './App.css'
 
-const SERVER_URL = "http://localhost:8000"
-const WS_URL = "ws://localhost:8000/ws"
+const domain = process.env.REACT_APP_API_DOMAIN || "localhost"
+
+const SERVER_URL = `http://${domain}:8000`
+const WS_URL = `ws://${domain}:8000/ws`
 
 function App() {
   const [url, setUrl] = useState<string>()
