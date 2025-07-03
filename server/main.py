@@ -32,13 +32,23 @@ async def ingest(request: Request):
     return {"message": f"ingested: {url}"}
 
 
+messages_archive = []
 @doc_server.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     while True:
         data = await websocket.receive_text()
+        messages_archive.append({
+            "role": "user",
+            "content": data
+        })
         print(f"Received: {data}")
-        await websocket.send_text(data)
+        if data == "Hello":
+            await websocket.send_text("Hello, what is your name?")
+        elif data.startswith("My name is "):
+            await websocket.send_text(f"Nice to meet you, {data[11:]}!")
+        else:
+            await websocket.send_text(data)
 
         # answer = answer_question(data)
         # await websocket.send_text(answer)

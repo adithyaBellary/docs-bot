@@ -8,6 +8,7 @@ function App() {
   const [url, setUrl] = useState<string>()
   const [fetched, setFetched] = useState<boolean>(false)
   const [message, setMessage] = useState<string>("")
+  const [messageStore, setMessageStore] = useState<{role: string, content: string}[]>([])
 
   const scrapeHandler = () => {
     if (!url) {
@@ -33,12 +34,13 @@ function App() {
   }
 
   ws.onmessage = (event) => {
-    console.log('what we got:', event.data)
+    setMessageStore(messages => [...messages, {"role": "assistant", "content": event.data}])
   }
 
   const send = () => {
+    messageStore.push({"role": "user", "content": message})
+    setMessage("")
     ws.send(message)
-    console.log('sent', message)
   }
   
   return (
@@ -51,7 +53,16 @@ function App() {
         {fetched && (
           <>
             <div>Let us start chatting!</div>
-            <input onChange={(e) => setMessage(e.target.value)}/> <button onClick={send}>send</button>
+            
+            {messageStore.map((msg, _) => {
+              return (
+                <div>
+                  <strong>{msg.role}</strong>: {msg.content}
+                </div>
+              )
+              
+            })}
+            <input value={message} onChange={(e) => setMessage(e.target.value)}/> <button onClick={send}>send</button>
           </>
         )}
       </div>
