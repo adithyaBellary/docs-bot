@@ -7,7 +7,7 @@ import os
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-def answer_question(query):
+def answer_question(query, messages_archive=None):
   embeddings = OpenAIEmbeddings()
   vector_store = FAISS.load_local("faiss_local", embeddings, allow_dangerous_deserialization=True)
   docs = vector_store.similarity_search(query, k=4)
@@ -15,7 +15,9 @@ def answer_question(query):
   context = "\n\n".join([f"Source: {doc.metadata}\n{doc.page_content}" for doc in docs])
 
   prompt = f"""You are a helpful documentation assistant. Answer any and all quesitons based only on the context below. Do not go elsewhere for information. Please cite the source of section where you got your answer from.
-    Context: {context}
+    Documentation Context: {context}
+
+    Previous Messages Context: {messages_archive}
 
     Question: {query}"""
 

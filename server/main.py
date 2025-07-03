@@ -42,16 +42,22 @@ async def websocket_endpoint(websocket: WebSocket):
             "role": "user",
             "content": data
         })
-        print(f"Received: {data}")
-        if data == "Hello":
-            await websocket.send_text("Hello, what is your name?")
-        elif data.startswith("My name is "):
-            await websocket.send_text(f"Nice to meet you, {data[11:]}!")
-        else:
-            await websocket.send_text(data)
 
-        # answer = answer_question(data)
-        # await websocket.send_text(answer)
+        print(f"Received: {data}")
+
+        # if data == "Hello":
+        #     await websocket.send_text("Hello, what is your name?")
+        # elif data.startswith("My name is "):
+        #     await websocket.send_text(f"Nice to meet you, {data[11:]}!")
+        # else:
+        #     await websocket.send_text(data)
+
+        answer = answer_question(data, messages_archive)
+        messages_archive.append({
+            "role": "assistant",
+            "content": answer
+        })
+        await websocket.send_text(answer)
 
 doc_server.mount("/", StaticFiles(directory=fe_path, html=True), name="docs-bot-frontend")
 
